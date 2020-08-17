@@ -21,11 +21,9 @@ limitations under the License.
 package v1beta1
 
 import (
-	unsafe "unsafe"
-
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
-	wardle "k8s.io/sample-apiserver/pkg/apis/wardle"
+	v1alpha1 "k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1"
 )
 
 func init() {
@@ -35,141 +33,150 @@ func init() {
 // RegisterConversions adds conversion functions to the given scheme.
 // Public to allow building arbitrary schemes.
 func RegisterConversions(s *runtime.Scheme) error {
-	if err := s.AddGeneratedConversionFunc((*Flunder)(nil), (*wardle.Flunder)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_Flunder_To_wardle_Flunder(a.(*Flunder), b.(*wardle.Flunder), scope)
+	if err := s.AddGeneratedConversionFunc((*Flunder)(nil), (*v1alpha1.Flunder)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_Flunder_To_v1alpha1_Flunder(a.(*Flunder), b.(*v1alpha1.Flunder), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*wardle.Flunder)(nil), (*Flunder)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_wardle_Flunder_To_v1beta1_Flunder(a.(*wardle.Flunder), b.(*Flunder), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.Flunder)(nil), (*Flunder)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Flunder_To_v1beta1_Flunder(a.(*v1alpha1.Flunder), b.(*Flunder), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*FlunderList)(nil), (*wardle.FlunderList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_FlunderList_To_wardle_FlunderList(a.(*FlunderList), b.(*wardle.FlunderList), scope)
+	if err := s.AddGeneratedConversionFunc((*FlunderList)(nil), (*v1alpha1.FlunderList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_FlunderList_To_v1alpha1_FlunderList(a.(*FlunderList), b.(*v1alpha1.FlunderList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*wardle.FlunderList)(nil), (*FlunderList)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_wardle_FlunderList_To_v1beta1_FlunderList(a.(*wardle.FlunderList), b.(*FlunderList), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.FlunderList)(nil), (*FlunderList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_FlunderList_To_v1beta1_FlunderList(a.(*v1alpha1.FlunderList), b.(*FlunderList), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*FlunderSpec)(nil), (*wardle.FlunderSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_FlunderSpec_To_wardle_FlunderSpec(a.(*FlunderSpec), b.(*wardle.FlunderSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*FlunderSpec)(nil), (*v1alpha1.FlunderSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_FlunderSpec_To_v1alpha1_FlunderSpec(a.(*FlunderSpec), b.(*v1alpha1.FlunderSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*wardle.FlunderSpec)(nil), (*FlunderSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_wardle_FlunderSpec_To_v1beta1_FlunderSpec(a.(*wardle.FlunderSpec), b.(*FlunderSpec), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.FlunderSpec)(nil), (*FlunderSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_FlunderSpec_To_v1beta1_FlunderSpec(a.(*v1alpha1.FlunderSpec), b.(*FlunderSpec), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*FlunderStatus)(nil), (*wardle.FlunderStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_v1beta1_FlunderStatus_To_wardle_FlunderStatus(a.(*FlunderStatus), b.(*wardle.FlunderStatus), scope)
+	if err := s.AddGeneratedConversionFunc((*FlunderStatus)(nil), (*v1alpha1.FlunderStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1beta1_FlunderStatus_To_v1alpha1_FlunderStatus(a.(*FlunderStatus), b.(*v1alpha1.FlunderStatus), scope)
 	}); err != nil {
 		return err
 	}
-	if err := s.AddGeneratedConversionFunc((*wardle.FlunderStatus)(nil), (*FlunderStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
-		return Convert_wardle_FlunderStatus_To_v1beta1_FlunderStatus(a.(*wardle.FlunderStatus), b.(*FlunderStatus), scope)
+	if err := s.AddGeneratedConversionFunc((*v1alpha1.FlunderStatus)(nil), (*FlunderStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_FlunderStatus_To_v1beta1_FlunderStatus(a.(*v1alpha1.FlunderStatus), b.(*FlunderStatus), scope)
 	}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func autoConvert_v1beta1_Flunder_To_wardle_Flunder(in *Flunder, out *wardle.Flunder, s conversion.Scope) error {
+func autoConvert_v1beta1_Flunder_To_v1alpha1_Flunder(in *Flunder, out *v1alpha1.Flunder, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_v1beta1_FlunderSpec_To_wardle_FlunderSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1beta1_FlunderSpec_To_v1alpha1_FlunderSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
-	if err := Convert_v1beta1_FlunderStatus_To_wardle_FlunderStatus(&in.Status, &out.Status, s); err != nil {
+	if err := Convert_v1beta1_FlunderStatus_To_v1alpha1_FlunderStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_v1beta1_Flunder_To_wardle_Flunder is an autogenerated conversion function.
-func Convert_v1beta1_Flunder_To_wardle_Flunder(in *Flunder, out *wardle.Flunder, s conversion.Scope) error {
-	return autoConvert_v1beta1_Flunder_To_wardle_Flunder(in, out, s)
+// Convert_v1beta1_Flunder_To_v1alpha1_Flunder is an autogenerated conversion function.
+func Convert_v1beta1_Flunder_To_v1alpha1_Flunder(in *Flunder, out *v1alpha1.Flunder, s conversion.Scope) error {
+	return autoConvert_v1beta1_Flunder_To_v1alpha1_Flunder(in, out, s)
 }
 
-func autoConvert_wardle_Flunder_To_v1beta1_Flunder(in *wardle.Flunder, out *Flunder, s conversion.Scope) error {
+func autoConvert_v1alpha1_Flunder_To_v1beta1_Flunder(in *v1alpha1.Flunder, out *Flunder, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
-	if err := Convert_wardle_FlunderSpec_To_v1beta1_FlunderSpec(&in.Spec, &out.Spec, s); err != nil {
+	if err := Convert_v1alpha1_FlunderSpec_To_v1beta1_FlunderSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
-	if err := Convert_wardle_FlunderStatus_To_v1beta1_FlunderStatus(&in.Status, &out.Status, s); err != nil {
+	if err := Convert_v1alpha1_FlunderStatus_To_v1beta1_FlunderStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Convert_wardle_Flunder_To_v1beta1_Flunder is an autogenerated conversion function.
-func Convert_wardle_Flunder_To_v1beta1_Flunder(in *wardle.Flunder, out *Flunder, s conversion.Scope) error {
-	return autoConvert_wardle_Flunder_To_v1beta1_Flunder(in, out, s)
+// Convert_v1alpha1_Flunder_To_v1beta1_Flunder is an autogenerated conversion function.
+func Convert_v1alpha1_Flunder_To_v1beta1_Flunder(in *v1alpha1.Flunder, out *Flunder, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Flunder_To_v1beta1_Flunder(in, out, s)
 }
 
-func autoConvert_v1beta1_FlunderList_To_wardle_FlunderList(in *FlunderList, out *wardle.FlunderList, s conversion.Scope) error {
+func autoConvert_v1beta1_FlunderList_To_v1alpha1_FlunderList(in *FlunderList, out *v1alpha1.FlunderList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]wardle.Flunder)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]v1alpha1.Flunder, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_Flunder_To_v1alpha1_Flunder(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
-// Convert_v1beta1_FlunderList_To_wardle_FlunderList is an autogenerated conversion function.
-func Convert_v1beta1_FlunderList_To_wardle_FlunderList(in *FlunderList, out *wardle.FlunderList, s conversion.Scope) error {
-	return autoConvert_v1beta1_FlunderList_To_wardle_FlunderList(in, out, s)
+// Convert_v1beta1_FlunderList_To_v1alpha1_FlunderList is an autogenerated conversion function.
+func Convert_v1beta1_FlunderList_To_v1alpha1_FlunderList(in *FlunderList, out *v1alpha1.FlunderList, s conversion.Scope) error {
+	return autoConvert_v1beta1_FlunderList_To_v1alpha1_FlunderList(in, out, s)
 }
 
-func autoConvert_wardle_FlunderList_To_v1beta1_FlunderList(in *wardle.FlunderList, out *FlunderList, s conversion.Scope) error {
+func autoConvert_v1alpha1_FlunderList_To_v1beta1_FlunderList(in *v1alpha1.FlunderList, out *FlunderList, s conversion.Scope) error {
 	out.ListMeta = in.ListMeta
-	out.Items = *(*[]Flunder)(unsafe.Pointer(&in.Items))
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]Flunder, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_Flunder_To_v1beta1_Flunder(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.Items = nil
+	}
 	return nil
 }
 
-// Convert_wardle_FlunderList_To_v1beta1_FlunderList is an autogenerated conversion function.
-func Convert_wardle_FlunderList_To_v1beta1_FlunderList(in *wardle.FlunderList, out *FlunderList, s conversion.Scope) error {
-	return autoConvert_wardle_FlunderList_To_v1beta1_FlunderList(in, out, s)
+// Convert_v1alpha1_FlunderList_To_v1beta1_FlunderList is an autogenerated conversion function.
+func Convert_v1alpha1_FlunderList_To_v1beta1_FlunderList(in *v1alpha1.FlunderList, out *FlunderList, s conversion.Scope) error {
+	return autoConvert_v1alpha1_FlunderList_To_v1beta1_FlunderList(in, out, s)
 }
 
-func autoConvert_v1beta1_FlunderSpec_To_wardle_FlunderSpec(in *FlunderSpec, out *wardle.FlunderSpec, s conversion.Scope) error {
-	out.FlunderReference = in.FlunderReference
-	out.FischerReference = in.FischerReference
-	out.ReferenceType = wardle.ReferenceType(in.ReferenceType)
+func autoConvert_v1beta1_FlunderSpec_To_v1alpha1_FlunderSpec(in *FlunderSpec, out *v1alpha1.FlunderSpec, s conversion.Scope) error {
+	// WARNING: in.FlunderReference requires manual conversion: does not exist in peer-type
+	// WARNING: in.FischerReference requires manual conversion: does not exist in peer-type
+	// WARNING: in.ReferenceType requires manual conversion: inconvertible types (k8s.io/sample-apiserver/pkg/apis/wardle/v1beta1.ReferenceType vs *k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1.ReferenceType)
 	return nil
 }
 
-// Convert_v1beta1_FlunderSpec_To_wardle_FlunderSpec is an autogenerated conversion function.
-func Convert_v1beta1_FlunderSpec_To_wardle_FlunderSpec(in *FlunderSpec, out *wardle.FlunderSpec, s conversion.Scope) error {
-	return autoConvert_v1beta1_FlunderSpec_To_wardle_FlunderSpec(in, out, s)
-}
-
-func autoConvert_wardle_FlunderSpec_To_v1beta1_FlunderSpec(in *wardle.FlunderSpec, out *FlunderSpec, s conversion.Scope) error {
-	out.FlunderReference = in.FlunderReference
-	out.FischerReference = in.FischerReference
-	out.ReferenceType = ReferenceType(in.ReferenceType)
+func autoConvert_v1alpha1_FlunderSpec_To_v1beta1_FlunderSpec(in *v1alpha1.FlunderSpec, out *FlunderSpec, s conversion.Scope) error {
+	// WARNING: in.Reference requires manual conversion: does not exist in peer-type
+	// WARNING: in.ReferenceType requires manual conversion: inconvertible types (*k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1.ReferenceType vs k8s.io/sample-apiserver/pkg/apis/wardle/v1beta1.ReferenceType)
 	return nil
 }
 
-// Convert_wardle_FlunderSpec_To_v1beta1_FlunderSpec is an autogenerated conversion function.
-func Convert_wardle_FlunderSpec_To_v1beta1_FlunderSpec(in *wardle.FlunderSpec, out *FlunderSpec, s conversion.Scope) error {
-	return autoConvert_wardle_FlunderSpec_To_v1beta1_FlunderSpec(in, out, s)
-}
-
-func autoConvert_v1beta1_FlunderStatus_To_wardle_FlunderStatus(in *FlunderStatus, out *wardle.FlunderStatus, s conversion.Scope) error {
+func autoConvert_v1beta1_FlunderStatus_To_v1alpha1_FlunderStatus(in *FlunderStatus, out *v1alpha1.FlunderStatus, s conversion.Scope) error {
 	return nil
 }
 
-// Convert_v1beta1_FlunderStatus_To_wardle_FlunderStatus is an autogenerated conversion function.
-func Convert_v1beta1_FlunderStatus_To_wardle_FlunderStatus(in *FlunderStatus, out *wardle.FlunderStatus, s conversion.Scope) error {
-	return autoConvert_v1beta1_FlunderStatus_To_wardle_FlunderStatus(in, out, s)
+// Convert_v1beta1_FlunderStatus_To_v1alpha1_FlunderStatus is an autogenerated conversion function.
+func Convert_v1beta1_FlunderStatus_To_v1alpha1_FlunderStatus(in *FlunderStatus, out *v1alpha1.FlunderStatus, s conversion.Scope) error {
+	return autoConvert_v1beta1_FlunderStatus_To_v1alpha1_FlunderStatus(in, out, s)
 }
 
-func autoConvert_wardle_FlunderStatus_To_v1beta1_FlunderStatus(in *wardle.FlunderStatus, out *FlunderStatus, s conversion.Scope) error {
+func autoConvert_v1alpha1_FlunderStatus_To_v1beta1_FlunderStatus(in *v1alpha1.FlunderStatus, out *FlunderStatus, s conversion.Scope) error {
 	return nil
 }
 
-// Convert_wardle_FlunderStatus_To_v1beta1_FlunderStatus is an autogenerated conversion function.
-func Convert_wardle_FlunderStatus_To_v1beta1_FlunderStatus(in *wardle.FlunderStatus, out *FlunderStatus, s conversion.Scope) error {
-	return autoConvert_wardle_FlunderStatus_To_v1beta1_FlunderStatus(in, out, s)
+// Convert_v1alpha1_FlunderStatus_To_v1beta1_FlunderStatus is an autogenerated conversion function.
+func Convert_v1alpha1_FlunderStatus_To_v1beta1_FlunderStatus(in *v1alpha1.FlunderStatus, out *FlunderStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha1_FlunderStatus_To_v1beta1_FlunderStatus(in, out, s)
 }

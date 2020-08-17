@@ -19,6 +19,7 @@ package wardle
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/sample-apiserver/pkg/lib/libtype"
 )
 
 const GroupName = "wardle.example.com"
@@ -29,11 +30,6 @@ var SchemeGroupVersion = schema.GroupVersion{Group: GroupName, Version: runtime.
 // Kind takes an unqualified kind and returns back a Group qualified GroupKind
 func Kind(kind string) schema.GroupKind {
 	return SchemeGroupVersion.WithKind(kind).GroupKind()
-}
-
-// Resource takes an unqualified resource and returns back a Group qualified GroupResource
-func Resource(resource string) schema.GroupResource {
-	return SchemeGroupVersion.WithResource(resource).GroupResource()
 }
 
 var (
@@ -51,3 +47,17 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	)
 	return nil
 }
+
+var (
+	FlunderAPI = libtype.API{
+		New:                  func() runtime.Object { return &Flunder{} },
+		NewList:              func() runtime.Object { return &FlunderList{} },
+		GroupVersionResource: SchemeGroupVersion.WithResource("flunders"),
+	}
+
+	FischerAPI = libtype.API{
+		New:                  func() runtime.Object { return &Fischer{} },
+		NewList:              func() runtime.Object { return &FischerList{} },
+		GroupVersionResource: SchemeGroupVersion.WithResource("fischers"),
+	}
+)

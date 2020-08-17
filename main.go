@@ -18,23 +18,39 @@ package main
 
 import (
 	"flag"
-	"os"
-
-	"k8s.io/klog/v2"
 
 	genericapiserver "k8s.io/apiserver/pkg/server"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/component-base/logs"
+	"k8s.io/klog/v2"
+	"k8s.io/sample-apiserver/pkg/apis/wardle"
+	"k8s.io/sample-apiserver/pkg/apis/wardle/install"
+	"k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1"
+	"k8s.io/sample-apiserver/pkg/apis/wardle/v1beta1"
+	"k8s.io/sample-apiserver/pkg/apiserver"
 	"k8s.io/sample-apiserver/pkg/cmd/server"
+	"k8s.io/sample-apiserver/pkg/generated/openapi"
+	"k8s.io/sample-apiserver/pkg/lib/librest"
+	"k8s.io/sample-apiserver/pkg/lib/libserver"
+	"k8s.io/sample-apiserver/pkg/lib/libstorage"
+	"k8s.io/sample-apiserver/pkg/registry/wardle/fischer"
 )
 
 func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
+	install.Install(apiserver.Scheme)
+	librest.AddRESTAPI(v1alpha1.FlunderAPI, libstorage.NewRESTProvider(wardle.FlunderAPI, nil))
+	librest.AddRESTAPI(v1alpha1.FischerAPI, libstorage.NewRESTProvider(wardle.FischerAPI,
+		fischer.FischerStrategy{}))
+	librest.AddRESTAPI(v1beta1.FlunderAPI, libstorage.NewRESTProvider(wardle.FlunderAPI, nil))
+	o := libserver.NewOptions(v1alpha1.SchemeGroupVersion, openapi.GetOpenAPIDefinitions)
+
 	stopCh := genericapiserver.SetupSignalHandler()
-	options := server.NewWardleServerOptions(os.Stdout, os.Stderr)
-	cmd := server.NewCommandStartWardleServer(options, stopCh)
+	cmd := server.NewCommandStartServer(o, stopCh)
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
+
 	if err := cmd.Execute(); err != nil {
 		klog.Fatal(err)
 	}

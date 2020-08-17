@@ -7,6 +7,7 @@ go 1.15
 require (
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/gofuzz v1.1.0
+	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	k8s.io/apimachinery v0.0.0-20200813011404-2c6e837afb20
 	k8s.io/apiserver v0.0.0-20200813013048-5e8a2ce77c07

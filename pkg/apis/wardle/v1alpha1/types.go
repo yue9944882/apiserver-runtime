@@ -56,6 +56,10 @@ type Flunder struct {
 	Status FlunderStatus `json:"status,omitempty" protobuf:"bytes,3,opt,name=status"`
 }
 
+func (f *Flunder) GetObjectMeta() *metav1.ObjectMeta {
+	return &f.ObjectMeta
+}
+
 // +genclient
 // +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -77,4 +81,8 @@ type FischerList struct {
 	metav1.ListMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
 	Items []Fischer `json:"items" protobuf:"bytes,2,rep,name=items"`
+}
+
+func (f *Fischer) GetObjectMeta() *metav1.ObjectMeta {
+	return &f.ObjectMeta
 }

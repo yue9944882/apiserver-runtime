@@ -16,7 +16,7 @@ limitations under the License.
 
 // +k8s:openapi-gen=true
 // +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=k8s.io/sample-apiserver/pkg/apis/wardle
+// +k8s:conversion-gen=k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1
 // +k8s:defaulter-gen=TypeMeta
 // +groupName=wardle.example.com
 
