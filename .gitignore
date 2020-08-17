@@ -1,0 +1,10 @@
+.idea
+token
+ca.*
+client.crt
+client.csr
+client.key
+client.p12
+kubeconfig
+default.etcd
+apiserver.local.config

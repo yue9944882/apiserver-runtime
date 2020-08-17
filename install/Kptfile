@@ -1,0 +1,42 @@
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: apiserver
+openAPI:
+  definitions:
+    io.k8s.cli.setters.name:
+      x-k8s-cli:
+        setter:
+          name: name
+          value: example
+          isSet: true
+    io.k8s.cli.substitutions.namespace:
+      x-k8s-cli:
+        substitution:
+          name: namespace
+          pattern: ${name}-system
+          values:
+          - marker: ${name}
+            ref: '#/definitions/io.k8s.cli.setters.name'
+    io.k8s.cli.substitutions.group:
+      x-k8s-cli:
+        substitution:
+          name: group
+          pattern: ${name}.example.com
+          values:
+          - marker: ${name}
+            ref: '#/definitions/io.k8s.cli.setters.name'
+    io.k8s.cli.substitutions.version-group:
+      x-k8s-cli:
+        substitution:
+          name: version-group
+          pattern: v1alpha1.${name}.example.com
+          values:
+          - marker: ${name}
+            ref: '#/definitions/io.k8s.cli.setters.name'
+    io.k8s.cli.setters.image:
+      x-k8s-cli:
+        setter:
+          name: image
+          value: IMAGE:VERSION
+          isSet: true
