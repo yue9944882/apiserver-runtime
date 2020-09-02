@@ -21,10 +21,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pwittrock/apiserver-runtime/pkg/admission/wardleinitializer"
+	"github.com/pwittrock/apiserver-runtime/pkg/generated/clientset/versioned/fake"
+	informers "github.com/pwittrock/apiserver-runtime/pkg/generated/informers/externalversions"
 	"k8s.io/apiserver/pkg/admission"
-	"k8s.io/sample-apiserver/pkg/admission/wardleinitializer"
-	"k8s.io/sample-apiserver/pkg/generated/clientset/versioned/fake"
-	informers "k8s.io/sample-apiserver/pkg/generated/informers/externalversions"
 )
 
 // TestWantsInternalWardleInformerFactory ensures that the informer factory is injected

@@ -21,14 +21,14 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/pwittrock/apiserver-runtime/pkg/admission/wardleinitializer"
+	"github.com/pwittrock/apiserver-runtime/pkg/apis/wardle"
+	informers "github.com/pwittrock/apiserver-runtime/pkg/generated/informers/externalversions"
+	listers "github.com/pwittrock/apiserver-runtime/pkg/generated/listers/wardle/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apiserver/pkg/admission"
-	"k8s.io/sample-apiserver/pkg/admission/wardleinitializer"
-	"k8s.io/sample-apiserver/pkg/apis/wardle"
-	informers "k8s.io/sample-apiserver/pkg/generated/informers/externalversions"
-	listers "k8s.io/sample-apiserver/pkg/generated/listers/wardle/v1alpha1"
 )
 
 // Register registers a plugin

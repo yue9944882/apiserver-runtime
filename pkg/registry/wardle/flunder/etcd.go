@@ -17,34 +17,46 @@ limitations under the License.
 package flunder
 
 import (
+	"sync"
+
+	"github.com/pwittrock/apiserver-runtime/pkg/apis/wardle"
+	"github.com/pwittrock/apiserver-runtime/pkg/registry"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/registry/generic"
 	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"k8s.io/sample-apiserver/pkg/apis/wardle"
-	"k8s.io/sample-apiserver/pkg/registry"
+)
+
+var (
+	s sync.Once
+	r *registry.REST
+	e error
 )
 
 // NewREST returns a RESTStorage object that will work against API services.
 func NewREST(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (*registry.REST, error) {
-	strategy := NewStrategy(scheme)
+	s.Do(func() {
+		strategy := NewStrategy(scheme)
 
-	store := &genericregistry.Store{
-		NewFunc:                  func() runtime.Object { return &wardle.Flunder{} },
-		NewListFunc:              func() runtime.Object { return &wardle.FlunderList{} },
-		PredicateFunc:            MatchFlunder,
-		DefaultQualifiedResource: wardle.Resource("flunders"),
+		store := &genericregistry.Store{
+			NewFunc:                  func() runtime.Object { return &wardle.Flunder{} },
+			NewListFunc:              func() runtime.Object { return &wardle.FlunderList{} },
+			PredicateFunc:            MatchFlunder,
+			DefaultQualifiedResource: wardle.Resource("flunders"),
 
-		CreateStrategy: strategy,
-		UpdateStrategy: strategy,
-		DeleteStrategy: strategy,
+			CreateStrategy: strategy,
+			UpdateStrategy: strategy,
+			DeleteStrategy: strategy,
 
-		// TODO: define table converter that exposes more than name/creation timestamp
-		TableConvertor: rest.NewDefaultTableConvertor(wardle.Resource("flunders")),
-	}
-	options := &generic.StoreOptions{RESTOptions: optsGetter, AttrFunc: GetAttrs}
-	if err := store.CompleteWithOptions(options); err != nil {
-		return nil, err
-	}
-	return &registry.REST{store}, nil
+			// TODO: define table converter that exposes more than name/creation timestamp
+			TableConvertor: rest.NewDefaultTableConvertor(wardle.Resource("flunders")),
+		}
+		options := &generic.StoreOptions{RESTOptions: optsGetter, AttrFunc: GetAttrs}
+		if err := store.CompleteWithOptions(options); err != nil {
+			e = err
+			return
+		}
+		r = &registry.REST{store}
+	})
+	return r, e
 }

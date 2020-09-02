@@ -18,7 +18,7 @@ package fuzzer
 
 import (
 	fuzz "github.com/google/gofuzz"
-	"k8s.io/sample-apiserver/pkg/apis/wardle"
+	"github.com/pwittrock/apiserver-runtime/pkg/apis/wardle"
 
 	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
 )

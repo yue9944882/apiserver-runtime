@@ -22,14 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
-
-	"k8s.io/sample-apiserver/pkg/apis/wardle"
-	"k8s.io/sample-apiserver/pkg/apis/wardle/install"
-	wardleregistry "k8s.io/sample-apiserver/pkg/registry"
-	fischerstorage "k8s.io/sample-apiserver/pkg/registry/wardle/fischer"
-	flunderstorage "k8s.io/sample-apiserver/pkg/registry/wardle/flunder"
 )
 
 var (
@@ -41,7 +34,6 @@ var (
 )
 
 func init() {
-	install.Install(Scheme)
 
 	// we need to add the options to empty v1
 	// TODO fix the server code to avoid this
@@ -101,26 +93,35 @@ func (cfg *Config) Complete() CompletedConfig {
 
 // New returns a new instance of WardleServer from the given config.
 func (c completedConfig) New() (*WardleServer, error) {
-	genericServer, err := c.GenericConfig.New("sample-apiserver", genericapiserver.NewEmptyDelegate())
+	genericServer, err := c.GenericConfig.New(GroupName+"-apiserver", genericapiserver.NewEmptyDelegate())
 	if err != nil {
 		return nil, err
 	}
+
+	// change: apiserver-runtime
+	genericServer = ApplyGenericAPIServerFns(genericServer)
 
 	s := &WardleServer{
 		GenericAPIServer: genericServer,
 	}
 
-	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(wardle.GroupName, Scheme, metav1.ParameterCodec, Codecs)
+	apiGroupInfo := genericapiserver.NewDefaultAPIGroupInfo(GroupName, Scheme, metav1.ParameterCodec, Codecs)
 
-	v1alpha1storage := map[string]rest.Storage{}
-	v1alpha1storage["flunders"] = wardleregistry.RESTInPeace(flunderstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
-	v1alpha1storage["fischers"] = wardleregistry.RESTInPeace(fischerstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
-	apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage
+	// change: apiserver-runtime
+	// v1alpha1storage := map[string]rest.Storage{}
+	// v1alpha1storage["flunders"] = wardleregistry.RESTInPeace(flunderstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
+	// v1alpha1storage["fischers"] = wardleregistry.RESTInPeace(fischerstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
+	// apiGroupInfo.VersionedResourcesStorageMap["v1alpha1"] = v1alpha1storage
 
-	v1beta1storage := map[string]rest.Storage{}
-	v1beta1storage["flunders"] = wardleregistry.RESTInPeace(flunderstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
-	apiGroupInfo.VersionedResourcesStorageMap["v1beta1"] = v1beta1storage
+	// v1beta1storage := map[string]rest.Storage{}
+	// v1beta1storage["flunders"] = wardleregistry.RESTInPeace(flunderstorage.NewREST(Scheme, c.GenericConfig.RESTOptionsGetter))
+	// apiGroupInfo.VersionedResourcesStorageMap["v1beta1"] = v1beta1storage
 
+	// Add new APIs through inserting into APIs
+	apiGroupInfo.VersionedResourcesStorageMap, err = BuildStorageMap(Scheme, c.GenericConfig.RESTOptionsGetter)
+	if err != nil {
+		return nil, err
+	}
 	if err := s.GenericAPIServer.InstallAPIGroup(&apiGroupInfo); err != nil {
 		return nil, err
 	}

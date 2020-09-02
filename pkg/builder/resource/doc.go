@@ -14,11 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:openapi-gen=true
-// +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=github.com/pwittrock/apiserver-runtime/pkg/apis/wardle
-// +k8s:defaulter-gen=TypeMeta
-// +groupName=wardle.example.com
-
-// Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "github.com/pwittrock/apiserver-runtime/pkg/apis/wardle/v1alpha1"
+// Package resource defines interfaces that may be implemented by types -- e.g. pkg/apis/GROUP/VERSION/types.go
+package resource

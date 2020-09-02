@@ -22,12 +22,12 @@ import (
 	"context"
 	"time"
 
+	v1beta1 "github.com/pwittrock/apiserver-runtime/pkg/apis/wardle/v1beta1"
+	scheme "github.com/pwittrock/apiserver-runtime/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
-	v1beta1 "k8s.io/sample-apiserver/pkg/apis/wardle/v1beta1"
-	scheme "k8s.io/sample-apiserver/pkg/generated/clientset/versioned/scheme"
 )
 
 // FlundersGetter has a method to return a FlunderInterface.

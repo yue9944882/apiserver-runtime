@@ -14,11 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// +k8s:openapi-gen=true
-// +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=github.com/pwittrock/apiserver-runtime/pkg/apis/wardle
-// +k8s:defaulter-gen=TypeMeta
-// +groupName=wardle.example.com
+package rest
 
-// Package v1alpha1 is the v1alpha1 version of the API.
-package v1alpha1 // import "github.com/pwittrock/apiserver-runtime/pkg/apis/wardle/v1alpha1"
+import (
+	"context"
+
+	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+type StatusSubResourceStrategy struct {
+	Strategy
+}
+
+// PrepareForUpdate calls the PrepareForUpdate function on obj if supported, otherwise does nothing.
+func (StatusSubResourceStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+	if v, ok := obj.(resource.StatusGetSetter); ok {
+		v.CopySpec(ctx, old)
+	}
+}

@@ -21,49 +21,40 @@ import (
 	"io"
 	"net"
 
+	"github.com/pwittrock/apiserver-runtime/pkg/apiserver"
 	"github.com/spf13/cobra"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/apiserver/pkg/admission"
-	"k8s.io/apiserver/pkg/endpoints/openapi"
 	"k8s.io/apiserver/pkg/features"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	genericoptions "k8s.io/apiserver/pkg/server/options"
 	utilfeature "k8s.io/apiserver/pkg/util/feature"
-	"k8s.io/sample-apiserver/pkg/admission/plugin/banflunder"
-	"k8s.io/sample-apiserver/pkg/admission/wardleinitializer"
-	"k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1"
-	"k8s.io/sample-apiserver/pkg/apiserver"
-	clientset "k8s.io/sample-apiserver/pkg/generated/clientset/versioned"
-	informers "k8s.io/sample-apiserver/pkg/generated/informers/externalversions"
-	sampleopenapi "k8s.io/sample-apiserver/pkg/generated/openapi"
 )
 
-const defaultEtcdPathPrefix = "/registry/wardle.example.com"
+//const defaultEtcdPathPrefix = "/registry/wardle.example.com"
 
 // WardleServerOptions contains state for master/api server
 type WardleServerOptions struct {
 	RecommendedOptions *genericoptions.RecommendedOptions
 
-	SharedInformerFactory informers.SharedInformerFactory
-	StdOut                io.Writer
-	StdErr                io.Writer
+	//SharedInformerFactory informers.SharedInformerFactory
+	StdOut io.Writer
+	StdErr io.Writer
 }
 
 // NewWardleServerOptions returns a new WardleServerOptions
-func NewWardleServerOptions(out, errOut io.Writer) *WardleServerOptions {
+func NewWardleServerOptions(out, errOut io.Writer, version schema.GroupVersion) *WardleServerOptions {
 	o := &WardleServerOptions{
 		RecommendedOptions: genericoptions.NewRecommendedOptions(
-			defaultEtcdPathPrefix,
-			apiserver.Codecs.LegacyCodec(v1alpha1.SchemeGroupVersion),
+			GetEctdPath(),
+			apiserver.Codecs.LegacyCodec(version),
 		),
 
 		StdOut: out,
 		StdErr: errOut,
 	}
-	o.RecommendedOptions.Etcd.StorageConfig.EncodeVersioner = runtime.NewMultiGroupVersioner(v1alpha1.SchemeGroupVersion, schema.GroupKind{Group: v1alpha1.GroupName})
+	o.RecommendedOptions.Etcd.StorageConfig.EncodeVersioner = runtime.NewMultiGroupVersioner(version, schema.GroupKind{Group: version.Group})
 	return o
 }
 
@@ -104,11 +95,14 @@ func (o WardleServerOptions) Validate(args []string) error {
 
 // Complete fills in fields required to have valid data
 func (o *WardleServerOptions) Complete() error {
-	// register admission plugins
-	banflunder.Register(o.RecommendedOptions.Admission.Plugins)
+	// change: apiserver-runtime
+	// // register admission plugins
+	// banflunder.Register(o.RecommendedOptions.Admission.Plugins)
 
-	// add admisison plugins to the RecommendedPluginOrder
-	o.RecommendedOptions.Admission.RecommendedPluginOrder = append(o.RecommendedOptions.Admission.RecommendedPluginOrder, "BanFlunder")
+	// // add admisison plugins to the RecommendedPluginOrder
+	// o.RecommendedOptions.Admission.RecommendedPluginOrder = append(o.RecommendedOptions.Admission.RecommendedPluginOrder, "BanFlunder")
+
+	ApplyServerOptionsFns(o)
 
 	return nil
 }
@@ -122,21 +116,29 @@ func (o *WardleServerOptions) Config() (*apiserver.Config, error) {
 
 	o.RecommendedOptions.Etcd.StorageConfig.Paging = utilfeature.DefaultFeatureGate.Enabled(features.APIListChunking)
 
-	o.RecommendedOptions.ExtraAdmissionInitializers = func(c *genericapiserver.RecommendedConfig) ([]admission.PluginInitializer, error) {
-		client, err := clientset.NewForConfig(c.LoopbackClientConfig)
-		if err != nil {
-			return nil, err
-		}
-		informerFactory := informers.NewSharedInformerFactory(client, c.LoopbackClientConfig.Timeout)
-		o.SharedInformerFactory = informerFactory
-		return []admission.PluginInitializer{wardleinitializer.New(informerFactory)}, nil
-	}
+	// change: apiserver-runtime
+	// ExtraAdmissionInitializers set through ApplyServerOptionsFns by appending to ServerOptionsFns
+	//
+	// o.RecommendedOptions.ExtraAdmissionInitializers = func(c *genericapiserver.RecommendedConfig) ([]admission.PluginInitializer, error) {
+	//	 client, err := clientset.NewForConfig(c.LoopbackClientConfig)
+	//	 if err != nil {
+	//		 return nil, err
+	//	 }
+	//	 informerFactory := informers.NewSharedInformerFactory(client, c.LoopbackClientConfig.Timeout)
+	//	 o.SharedInformerFactory = informerFactory
+	//	 return []admission.PluginInitializer{wardleinitializer.New(informerFactory)}, nil
+	// }
 
 	serverConfig := genericapiserver.NewRecommendedConfig(apiserver.Codecs)
 
-	serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(sampleopenapi.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(apiserver.Scheme))
-	serverConfig.OpenAPIConfig.Info.Title = "Wardle"
-	serverConfig.OpenAPIConfig.Info.Version = "0.1"
+	serverConfig = ApplyRecommendedConfigFns(serverConfig)
+
+	// change: apiserver-runtime
+	// OpenAPIConfig set through ApplyRecommendedConfigFns by calling SetOpenAPIDefinitions
+	//
+	// serverConfig.OpenAPIConfig = genericapiserver.DefaultOpenAPIConfig(sampleopenapi.GetOpenAPIDefinitions, openapi.NewDefinitionNamer(apiserver.Scheme))
+	// serverConfig.OpenAPIConfig.Info.Title = "Wardle"
+	// serverConfig.OpenAPIConfig.Info.Version = "0.1"
 
 	if err := o.RecommendedOptions.ApplyTo(serverConfig); err != nil {
 		return nil, err
@@ -161,9 +163,8 @@ func (o WardleServerOptions) RunWardleServer(stopCh <-chan struct{}) error {
 		return err
 	}
 
-	server.GenericAPIServer.AddPostStartHookOrDie("start-sample-server-informers", func(context genericapiserver.PostStartHookContext) error {
+	server.GenericAPIServer.AddPostStartHookOrDie("start-default-informers", func(context genericapiserver.PostStartHookContext) error {
 		config.GenericConfig.SharedInformerFactory.Start(context.StopCh)
-		o.SharedInformerFactory.Start(context.StopCh)
 		return nil
 	})
 

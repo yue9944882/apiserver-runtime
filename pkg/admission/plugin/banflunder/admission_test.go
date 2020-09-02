@@ -21,16 +21,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pwittrock/apiserver-runtime/pkg/admission/plugin/banflunder"
+	"github.com/pwittrock/apiserver-runtime/pkg/admission/wardleinitializer"
+	wardle "github.com/pwittrock/apiserver-runtime/pkg/apis/wardle/v1alpha1"
+	"github.com/pwittrock/apiserver-runtime/pkg/generated/clientset/versioned/fake"
+	informers "github.com/pwittrock/apiserver-runtime/pkg/generated/informers/externalversions"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/admission"
 	clienttesting "k8s.io/client-go/testing"
-	"k8s.io/sample-apiserver/pkg/admission/plugin/banflunder"
-	"k8s.io/sample-apiserver/pkg/admission/wardleinitializer"
-	wardle "k8s.io/sample-apiserver/pkg/apis/wardle/v1alpha1"
-	"k8s.io/sample-apiserver/pkg/generated/clientset/versioned/fake"
-	informers "k8s.io/sample-apiserver/pkg/generated/informers/externalversions"
 )
 
 // TestBanfluderAdmissionPlugin tests various test cases against
