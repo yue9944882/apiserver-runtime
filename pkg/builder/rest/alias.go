@@ -90,3 +90,5 @@ type Storage = rest.Storage
 type ValidateObjectFunc = rest.ValidateObjectFunc
 
 type ValidateObjectUpdateFunc = rest.ValidateObjectUpdateFunc
+
+var NewDefaultTableConvertor = rest.NewDefaultTableConvertor

@@ -48,6 +48,10 @@ type Object interface {
 
 	// GetGroupVersionResource returns the GroupVersionResource for this object
 	GetGroupVersionResource() schema.GroupVersionResource
+
+	// IsInternalVersion returns true if the object is also the internal version -- i.e. is the type defined
+	// for the API group an alias to this object.
+	IsInternalVersion() bool
 }
 
 type ListObject interface {

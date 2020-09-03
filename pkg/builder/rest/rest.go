@@ -18,9 +18,7 @@ package rest
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/jinzhu/inflection"
 	"github.com/pwittrock/apiserver-runtime/pkg/apiserver"
 	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,38 +31,11 @@ import (
 	"k8s.io/apiserver/pkg/registry/rest"
 )
 
-func GroupVersionResource(obj runtime.Object) (schema.GroupVersionResource, error) {
-	gvks, _, err := apiserver.Scheme.ObjectKinds(obj)
-	if err != nil {
-		return schema.GroupVersionResource{}, fmt.Errorf(
-			"no GroupVersionKind found for %T -- must register the type with the apiserver.Scheme", obj)
-	}
-	var gvk *schema.GroupVersionKind
-	for i := range gvks {
-		if gvks[i].Version == runtime.APIVersionInternal {
-			continue
-		}
-		gvk = &gvks[i]
-	}
-	if gvk == nil {
-		return schema.GroupVersionResource{}, fmt.Errorf("no external GroupVersionKind found for %T", obj)
-	}
+type ResourceHandlerProvider = apiserver.StorageProvider
 
-	return schema.GroupVersionResource{
-		Group:    gvk.Group,
-		Version:  gvk.Version,
-		Resource: inflection.Plural(strings.ToLower(gvk.Kind)),
-	}, nil
-}
-
-type HandlerProvider = apiserver.StorageProvider
-
-func New(obj resource.Object) HandlerProvider {
+func New(obj resource.Object) ResourceHandlerProvider {
 	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
-		gvr, err := GroupVersionResource(obj)
-		if err != nil {
-			return nil, err
-		}
+		gvr := obj.GetGroupVersionResource()
 		s := &DefaultStrategy{
 			Object:         obj,
 			ObjectTyper:    scheme,
@@ -78,13 +49,10 @@ func NewStatus(obj resource.StatusGetSetter) (
 	parent resource.Object,
 	path string,
 	request resource.Object,
-	handler HandlerProvider) {
+	handler ResourceHandlerProvider) {
 
 	return obj, "status", obj, func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
-		gvr, err := GroupVersionResource(obj)
-		if err != nil {
-			return nil, err
-		}
+		gvr := obj.GetGroupVersionResource()
 		s := &StatusSubResourceStrategy{Strategy: &DefaultStrategy{
 			Object:         obj,
 			ObjectTyper:    scheme,
@@ -94,22 +62,16 @@ func NewStatus(obj resource.StatusGetSetter) (
 	}
 }
 
-func NewWithStrategy(obj resource.Object, s Strategy) HandlerProvider {
+func NewWithStrategy(obj resource.Object, s Strategy) ResourceHandlerProvider {
 	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
-		gvr, err := GroupVersionResource(obj)
-		if err != nil {
-			return nil, err
-		}
+		gvr := obj.GetGroupVersionResource()
 		return newStore(obj.New, obj.NewList, gvr, s, optsGetter)
 	}
 }
 
-func NewStatusWithStrategy(obj resource.Object, s Strategy) HandlerProvider {
+func NewStatusWithStrategy(obj resource.Object, s Strategy) ResourceHandlerProvider {
 	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
-		gvr, err := GroupVersionResource(obj)
-		if err != nil {
-			return nil, err
-		}
+		gvr := obj.GetGroupVersionResource()
 		s = &StatusSubResourceStrategy{Strategy: s}
 		return newStore(obj.New, obj.NewList, gvr, s, optsGetter)
 	}
@@ -131,25 +93,25 @@ func newStore(
 		DeleteStrategy:           s,
 	}
 
-	options := &generic.StoreOptions{RESTOptions: optsGetter, AttrFunc: getAttrs}
+	options := &generic.StoreOptions{RESTOptions: optsGetter, AttrFunc: GetAttrs}
 	if err := store.CompleteWithOptions(options); err != nil {
 		return nil, err
 	}
 	return store, nil
 }
 
-// getAttrs returns labels.Set, fields.Set, and error in case the given runtime.Object is not a ObjectMetaProvider
-func getAttrs(obj runtime.Object) (labels.Set, fields.Set, error) {
+// GetAttrs returns labels.Set, fields.Set, and error in case the given runtime.Object is not a ObjectMetaProvider
+func GetAttrs(obj runtime.Object) (labels.Set, fields.Set, error) {
 	provider, ok := obj.(resource.ObjectMetaProvider)
 	if !ok {
 		return nil, nil, fmt.Errorf("given object of type %T does not have metadata", obj)
 	}
 	om := provider.GetObjectMeta()
-	return om.GetLabels(), selectableFields(om), nil
+	return om.GetLabels(), SelectableFields(om), nil
 }
 
 // SelectableFields returns a field set that represents the object.
-func selectableFields(obj *metav1.ObjectMeta) fields.Set {
+func SelectableFields(obj *metav1.ObjectMeta) fields.Set {
 	return generic.ObjectMetaFieldsSet(obj, true)
 }
 
@@ -158,10 +120,10 @@ func selectableFields(obj *metav1.ObjectMeta) fields.Set {
 // is under (e.g. &v1.Deployment{}), request is the subresource request (e.g. &Scale{}), storage is
 // the storage implementation that handles the requests.
 // A SubResourceStorageFn can be used with builder.APIServer.WithSubResourceAndStorageProvider(fn())
-type SubResourceStorageFn func() (path string, parent resource.Object, request resource.Object, storage HandlerProvider)
+type SubResourceStorageFn func() (path string, parent resource.Object, request resource.Object, storage ResourceHandlerProvider)
 
 // ResourceStorageFn is a function that returns the objects required to register a resource into an apiserver.
 // request is the resource type (e.g. &v1.Deployment{}), storage is the storage implementation that handles
 // the requests.
 // A ResourceFn can be used with builder.APIServer.WithResourceAndStorageProvider(fn())
-type ResourceStorageFn func() (request resource.Object, storage HandlerProvider)
+type ResourceStorageFn func() (request resource.Object, storage ResourceHandlerProvider)

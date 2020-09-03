@@ -139,7 +139,7 @@ func (DefaultStrategy) Match(label labels.Selector, field fields.Selector) stora
 	return storage.SelectionPredicate{
 		Label:    label,
 		Field:    field,
-		GetAttrs: getAttrs,
+		GetAttrs: GetAttrs,
 	}
 }
 
@@ -148,5 +148,5 @@ func (d DefaultStrategy) ConvertToTable(
 	if c, ok := obj.(resource.TableConverter); ok {
 		return c.ConvertToTable(ctx, tableOptions)
 	}
-	return d.ConvertToTable(ctx, obj, tableOptions)
+	return d.TableConvertor.ConvertToTable(ctx, obj, tableOptions)
 }
