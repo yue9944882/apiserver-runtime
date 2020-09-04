@@ -73,9 +73,11 @@ func (a *Server) WithAdditionalSchemesToBuild(s ...*runtime.Scheme) *Server {
 
 // WithResource registers the resource with the apiserver.
 //
-// If no versions of this GroupResource have already been registered, a new default handler which
-// uses etcd backed storage will be instantiated and the object's version will be used as the storage
-// version of the resource.
+// If no versions of this GroupResource have already been registered, a new default handler will be registered.
+// If the object implements rest.Getter, rest.Updater or rest.Creater then the object itself will be
+// used as the rest handler.
+// Otherwise a new storage which uses etcd backed storage will be instantiated and the object's version
+// will be used as the storage version of the resource.
 //
 // The default etcd backed storage will use a DefaultStrategy, which delegates most functions to the
 // object's implementation if the object implements the corresponding interface defined in the
@@ -101,9 +103,22 @@ func (a *Server) WithResource(obj resource.Object) *Server {
 	// reuse the storage if this resource has already been registered
 	if s, found := a.storage[gvr.GroupResource()]; found {
 		_ = a.forGroupVersionResource(gvr, obj, s.Get)
-	} else {
-		_ = a.forGroupVersionResource(gvr, obj, rest.New(obj))
+		return a
 	}
+
+	// If the type implements it's own storage, then use that
+	switch s := obj.(type) {
+	case rest.Creater:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
+	case rest.Updater:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
+	case rest.Getter:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
+	case rest.Lister:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
+	}
+
+	_ = a.forGroupVersionResource(gvr, obj, rest.New(obj))
 
 	// automatically create status subresource if the object implements the status interface
 	if sgs, ok := obj.(resource.StatusGetSetter); ok {

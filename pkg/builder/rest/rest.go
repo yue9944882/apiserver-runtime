@@ -33,6 +33,14 @@ import (
 
 type ResourceHandlerProvider = apiserver.StorageProvider
 
+type StaticHandlerProvider struct {
+	rest.Storage
+}
+
+func (p StaticHandlerProvider) Get(s *runtime.Scheme, g generic.RESTOptionsGetter) (rest.Storage, error) {
+	return p.Storage, nil
+}
+
 func New(obj resource.Object) ResourceHandlerProvider {
 	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
 		gvr := obj.GetGroupVersionResource()
