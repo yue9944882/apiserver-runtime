@@ -140,3 +140,13 @@ type StatusGetSetter interface {
 type ObjectMetaProvider interface {
 	GetObjectMeta() *metav1.ObjectMeta
 }
+
+func AddToScheme(objs ...Object) func(s *runtime.Scheme) error {
+	return func(s *runtime.Scheme) error {
+		for i := range objs {
+			obj := objs[i]
+			s.AddKnownTypes(obj.GetGroupVersionResource().GroupVersion(), obj.New(), obj.NewList())
+		}
+		return nil
+	}
+}
