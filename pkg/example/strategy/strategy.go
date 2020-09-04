@@ -14,5 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package builder contains functions for building Kubernetes apiservers.
-package builder
+package strategy
+
+import "github.com/pwittrock/apiserver-runtime/pkg/builder"
+
+type ExampleStrategy struct {
+	builder.DefaultStrategy
+}

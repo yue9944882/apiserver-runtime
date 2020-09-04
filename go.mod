@@ -8,6 +8,7 @@ require (
 	github.com/go-openapi/spec v0.19.3
 	github.com/google/gofuzz v1.1.0
 	github.com/spf13/cobra v1.0.0
+	golang.org/x/tools v0.0.0-20200903185744-af4cc2cd812e // indirect
 	k8s.io/api v0.19.0 // indirect
 	k8s.io/apimachinery v0.19.0
 	k8s.io/apiserver v0.19.0

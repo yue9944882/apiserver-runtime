@@ -14,5 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package builder contains functions for building Kubernetes apiservers.
-package builder
+package example
+
+import (
+	"github.com/pwittrock/apiserver-runtime/pkg/example/v1alpha1"
+)
+
+type ExampleResource = v1alpha1.ExampleResource
+type ExampleResourceList = v1alpha1.ExampleResourceList
