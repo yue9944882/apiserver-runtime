@@ -110,7 +110,7 @@ func newStore(
 
 // GetAttrs returns labels.Set, fields.Set, and error in case the given runtime.Object is not a ObjectMetaProvider
 func GetAttrs(obj runtime.Object) (labels.Set, fields.Set, error) {
-	provider, ok := obj.(resource.ObjectMetaProvider)
+	provider, ok := obj.(resource.Object)
 	if !ok {
 		return nil, nil, fmt.Errorf("given object of type %T does not have metadata", obj)
 	}

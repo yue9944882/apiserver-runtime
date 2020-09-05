@@ -29,15 +29,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// Object must be implemented by all objects
+// Object must be implemented by all resources.
 type Object interface {
-	// Object allows the apiserver to use the Object
+	// Object allows the apiserver libraries to operate on the Object
 	runtime.Object
 
-	// ObjectMetaProvider allows the apiserver to access the object's metadata
-	ObjectMetaProvider
+	// ObjectMetaProvider provides the resources ObjectMeta and is required by the apiserver libraries.
+	GetObjectMeta() *metav1.ObjectMeta
 
-	// Scoper is used to qualify the resource as namespace scoped
+	// Scoper is used to qualify the resource as either namespace scoped or non-namespace scoped.
 	rest.Scoper
 
 	// New returns a new instance of the resource -- e.g. &v1.Deployment{}
@@ -46,7 +46,8 @@ type Object interface {
 	// NewList return a new list instance of the resource -- e.g. &v1.DeploymentList{}
 	NewList() runtime.Object
 
-	// GetGroupVersionResource returns the GroupVersionResource for this object
+	// GetGroupVersionResource returns the GroupVersionResource for this resource.  The resource should
+	// be the all lowercase and pluralized kind.s
 	GetGroupVersionResource() schema.GroupVersionResource
 
 	// IsInternalVersion returns true if the object is also the internal version -- i.e. is the type defined
@@ -54,6 +55,7 @@ type Object interface {
 	IsInternalVersion() bool
 }
 
+// ListObject contains a list of a particular Object type
 type ListObject interface {
 	runtime.Object
 
@@ -74,11 +76,17 @@ type AllowUnconditionalUpdater interface {
 //
 // Canonicalize is only invoked for the type that is the storage version type.
 type Canonicalizer interface {
+	// Canonicalize formats the object for storage.  Only applied for the version matching the storage version.
 	Canonicalize()
 }
 
+// Converter defines functions for converting a version of a resource to / from the internal version.
 type Converter interface {
-	GetConversionFunction(interface{}, interface{})
+	// ConvertFromInternal converts an internal version of the object to this object's version
+	ConvertFromInternal(internal interface{})
+
+	// ConvertToInternal converts this version of the object to an internal version of the object.
+	ConvertToInternal() (internal interface{})
 }
 
 // Defaulter functions are invoked when deserializing an object.  If Default is implemented for a type, the apiserver
@@ -86,12 +94,8 @@ type Converter interface {
 // Default is invoked if the API invocation is for the resource version matching the object type regardless
 //of whether or not it is the storage version type for the API.
 type Defaulter interface {
+	// Default defaults unset values on the object.  Defaults are specific to the version.
 	Default()
-}
-
-// Namespacer defines whether a resource is namespaced or not.
-type Namespacer interface {
-	NamespaceScoped() bool
 }
 
 // PrepareForCreater functions are invoked before an object is stored during creation.  If PrepareForCreate
@@ -131,21 +135,36 @@ type ValidateUpdater interface {
 	ValidateUpdate(ctx context.Context, obj runtime.Object) field.ErrorList
 }
 
+// StatusGetSetter defines an interface for getting and setting the status for a resource.
 type StatusGetSetter interface {
 	Object
+	// CopyStatus copies the status from the argument to the object
 	CopyStatus(ctx context.Context, from runtime.Object)
+	// CopySpec copies the spec from the argument to the object
 	CopySpec(ctx context.Context, from runtime.Object)
 }
 
-type ObjectMetaProvider interface {
-	GetObjectMeta() *metav1.ObjectMeta
-}
-
+// AddToScheme returns a function to add the Objects to the scheme.
+//
+// AddToScheme will register the objects returned by New and NewList under the GroupVersion for each object.
+// AddToScheme will also register the objects under the "__internal" group version for each object that
+// returns true for IsInternalVersion.
+// AddToScheme will register the defaulting function if it implements the Defaulter inteface.
 func AddToScheme(objs ...Object) func(s *runtime.Scheme) error {
 	return func(s *runtime.Scheme) error {
 		for i := range objs {
 			obj := objs[i]
 			s.AddKnownTypes(obj.GetGroupVersionResource().GroupVersion(), obj.New(), obj.NewList())
+			if obj.IsInternalVersion() {
+				s.AddKnownTypes(schema.GroupVersion{
+					Group:   runtime.APIVersionInternal,
+					Version: obj.GetGroupVersionResource().Version}, obj.New(), obj.NewList())
+			}
+			if _, ok := obj.(Defaulter); ok {
+				s.AddTypeDefaultingFunc(obj, func(o interface{}) {
+					o.(Defaulter).Default()
+				})
+			}
 		}
 		return nil
 	}

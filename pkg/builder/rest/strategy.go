@@ -66,7 +66,7 @@ func (d DefaultStrategy) NamespaceScoped() bool {
 	if d.Object == nil {
 		return true
 	}
-	if n, ok := d.Object.(resource.Namespacer); ok {
+	if n, ok := d.Object.(rest.Scoper); ok {
 		return n.NamespaceScoped()
 	}
 	return true
