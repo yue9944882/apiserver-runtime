@@ -186,6 +186,25 @@ func (a *Server) WithResourceAndHandler(obj resource.Object, sp rest.ResourceHan
 	return a.forGroupVersionResource(gvr, obj, sp)
 }
 
+// WithResourceAndStorage registers the resource with the apiserver, applying fn to the storage for the resource
+// before completing it.
+//
+// May be used to change low-level storage configuration.
+func (a *Server) WithResourceAndStorage(obj resource.Object, fn rest.StoreFn) *Server {
+	gvr := obj.GetGroupVersionResource()
+	a.schemeBuilder.Register(resource.AddToScheme(obj))
+
+	_ = a.forGroupVersionResource(gvr, obj, rest.NewWithFn(obj, fn))
+
+	// automatically create status subresource if the object implements the status interface
+	if _, ok := obj.(resource.StatusGetSetter); ok {
+		st := gvr.GroupVersion().WithResource(gvr.Resource + "/status")
+		_ = a.forGroupVersionResource(st, obj, rest.NewStatusWithFn(obj, fn))
+	}
+
+	return a
+}
+
 // forGroupVersionResource manually registers storage for a specific resource or subresource version.
 func (a *Server) forGroupVersionResource(
 	gvr schema.GroupVersionResource, obj resource.Object, sp rest.ResourceHandlerProvider) *Server {

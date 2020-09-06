@@ -49,7 +49,7 @@ func New(obj resource.Object) ResourceHandlerProvider {
 			ObjectTyper:    scheme,
 			TableConvertor: rest.NewDefaultTableConvertor(gvr.GroupResource()),
 		}
-		return newStore(obj.New, obj.NewList, gvr, s, optsGetter)
+		return newStore(obj.New, obj.NewList, gvr, s, optsGetter, nil)
 	}
 }
 
@@ -66,14 +66,14 @@ func NewStatus(obj resource.StatusGetSetter) (
 			ObjectTyper:    scheme,
 			TableConvertor: rest.NewDefaultTableConvertor(gvr.GroupResource()),
 		}}
-		return newStore(obj.New, obj.NewList, gvr, s, optsGetter)
+		return newStore(obj.New, obj.NewList, gvr, s, optsGetter, nil)
 	}
 }
 
 func NewWithStrategy(obj resource.Object, s Strategy) ResourceHandlerProvider {
 	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
 		gvr := obj.GetGroupVersionResource()
-		return newStore(obj.New, obj.NewList, gvr, s, optsGetter)
+		return newStore(obj.New, obj.NewList, gvr, s, optsGetter, nil)
 	}
 }
 
@@ -81,14 +81,40 @@ func NewStatusWithStrategy(obj resource.Object, s Strategy) ResourceHandlerProvi
 	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
 		gvr := obj.GetGroupVersionResource()
 		s = &StatusSubResourceStrategy{Strategy: s}
-		return newStore(obj.New, obj.NewList, gvr, s, optsGetter)
+		return newStore(obj.New, obj.NewList, gvr, s, optsGetter, nil)
+	}
+}
+
+type StoreFn func(*genericregistry.Store, *generic.StoreOptions)
+
+func NewWithFn(obj resource.Object, fn StoreFn) ResourceHandlerProvider {
+	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
+		gvr := obj.GetGroupVersionResource()
+		s := &DefaultStrategy{
+			Object:         obj,
+			ObjectTyper:    scheme,
+			TableConvertor: rest.NewDefaultTableConvertor(gvr.GroupResource()),
+		}
+		return newStore(obj.New, obj.NewList, gvr, s, optsGetter, fn)
+	}
+}
+
+func NewStatusWithFn(obj resource.Object, fn StoreFn) ResourceHandlerProvider {
+	return func(scheme *runtime.Scheme, optsGetter generic.RESTOptionsGetter) (rest.Storage, error) {
+		gvr := obj.GetGroupVersionResource()
+		s := &DefaultStrategy{
+			Object:         obj,
+			ObjectTyper:    scheme,
+			TableConvertor: rest.NewDefaultTableConvertor(gvr.GroupResource()),
+		}
+		return newStore(obj.New, obj.NewList, gvr, &StatusSubResourceStrategy{Strategy: s}, optsGetter, fn)
 	}
 }
 
 // newStore returns a RESTStorage object that will work against API services.
 func newStore(
 	single, list func() runtime.Object, gvr schema.GroupVersionResource,
-	s Strategy, optsGetter generic.RESTOptionsGetter) (*genericregistry.Store, error) {
+	s Strategy, optsGetter generic.RESTOptionsGetter, fn StoreFn) (*genericregistry.Store, error) {
 
 	store := &genericregistry.Store{
 		NewFunc:                  single,
@@ -102,6 +128,9 @@ func newStore(
 	}
 
 	options := &generic.StoreOptions{RESTOptions: optsGetter, AttrFunc: GetAttrs}
+	if fn != nil {
+		fn(store, options)
+	}
 	if err := store.CompleteWithOptions(options); err != nil {
 		return nil, err
 	}
