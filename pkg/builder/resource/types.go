@@ -19,6 +19,8 @@ package resource
 import (
 	"context"
 
+	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource/resourcestrategy"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -26,10 +28,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// Object must be implemented by all resources.
+// Object must be implemented by all resources served by the apiserver.
 type Object interface {
 	// Object allows the apiserver libraries to operate on the Object
 	runtime.Object
@@ -53,86 +54,6 @@ type Object interface {
 	// IsInternalVersion returns true if the object is also the internal version -- i.e. is the type defined
 	// for the API group an alias to this object.
 	IsInternalVersion() bool
-}
-
-// ListObject contains a list of a particular Object type
-type ListObject interface {
-	runtime.Object
-
-	GetListMeta() *metav1.ListMeta
-}
-
-type AllowCreateOnUpdater interface {
-	AllowCreateOnUpdate() bool
-}
-
-type AllowUnconditionalUpdater interface {
-	AllowUnconditionalUpdate() bool
-}
-
-// Canonicalizer functions are invoked before an object is stored to canonicalize the object's format.
-// If Canonicalize is implemented fr a type, it will be invoked before storing an object of that type for
-// either a create or update.
-//
-// Canonicalize is only invoked for the type that is the storage version type.
-type Canonicalizer interface {
-	// Canonicalize formats the object for storage.  Only applied for the version matching the storage version.
-	Canonicalize()
-}
-
-// Converter defines functions for converting a version of a resource to / from the internal version.
-type Converter interface {
-	// ConvertFromInternal converts an internal version of the object to this object's version
-	ConvertFromInternal(internal interface{})
-
-	// ConvertToInternal converts this version of the object to an internal version of the object.
-	ConvertToInternal() (internal interface{})
-}
-
-// Defaulter functions are invoked when deserializing an object.  If Default is implemented for a type, the apiserver
-// will use it to perform defaulting for that version.
-// Default is invoked if the API invocation is for the resource version matching the object type regardless
-//of whether or not it is the storage version type for the API.
-type Defaulter interface {
-	// Default defaults unset values on the object.  Defaults are specific to the version.
-	Default()
-}
-
-// PrepareForCreater functions are invoked before an object is stored during creation.  If PrepareForCreate
-// is implemented for a type, it will be invoked before creating an object of that type.
-//
-// PrepareForCreater is only invoked for the type that is the storage version type.
-type PrepareForCreater interface {
-	PrepareForCreate(ctx context.Context)
-}
-
-// PrepareForUpdater functions are invoked before an object is stored during update.  If PrepareForCreate
-// is implemented for a type, it will be invoked before updating an object of that type.
-//
-// PrepareForUpdater is only invoked for the type that is the storage version type.
-type PrepareForUpdater interface {
-	PrepareForUpdate(ctx context.Context, old runtime.Object)
-}
-
-// TableConverter functions are invoked when printing an object from `kubectl get`.
-type TableConverter interface {
-	ConvertToTable(ctx context.Context, tableOptions runtime.Object) (*metav1.Table, error)
-}
-
-// Validater functions are invoked before an object is stored to validate the object during creation.  If Validate
-// is implemented for a type, it will be invoked before creating an object of that type.
-//
-// Validater is only invoked for the type that is the storage version type.
-type Validater interface {
-	Validate(ctx context.Context) field.ErrorList
-}
-
-// ValidateUpdater functions are invoked before an object is stored to validate the object during update.
-// If ValidateUpdater is implemented for a type, it will be invoked before updating an object of that type.
-//
-// ValidateUpdater is only invoked for the type that is the storage version type.
-type ValidateUpdater interface {
-	ValidateUpdate(ctx context.Context, obj runtime.Object) field.ErrorList
 }
 
 // StatusGetSetter defines an interface for getting and setting the status for a resource.
@@ -160,9 +81,9 @@ func AddToScheme(objs ...Object) func(s *runtime.Scheme) error {
 					Group:   runtime.APIVersionInternal,
 					Version: obj.GetGroupVersionResource().Version}, obj.New(), obj.NewList())
 			}
-			if _, ok := obj.(Defaulter); ok {
+			if _, ok := obj.(resourcestrategy.Defaulter); ok {
 				s.AddTypeDefaultingFunc(obj, func(o interface{}) {
-					o.(Defaulter).Default()
+					o.(resourcestrategy.Defaulter).Default()
 				})
 			}
 		}

@@ -31,20 +31,20 @@ import (
 
 var _ rest.ResourceHandlerProvider = ExampleHandlerProvider
 
-func ExampleHandlerProvider(s *runtime.Scheme, _ genericregistry.RESTOptionsGetter) (rest.Storage, error) {
+func ExampleHandlerProvider(s *runtime.Scheme, _ genericregistry.RESTOptionsGetter) (regsitryrest.Storage, error) {
 	return &ExampleHandler{
 		DefaultStrategy: builder.DefaultStrategy{
 			Object:      &v1alpha1.ExampleResource{},
 			ObjectTyper: s,
-			TableConvertor: rest.NewDefaultTableConvertor(
+			TableConvertor: regsitryrest.NewDefaultTableConvertor(
 				v1alpha1.ExampleResource{}.GetGroupVersionResource().GroupResource()),
 		},
 	}, nil
 }
 
-var _ rest.Getter = &ExampleHandler{}
-var _ rest.Lister = &ExampleHandler{}
-var _ rest.CreaterUpdater = &ExampleHandler{}
+var _ regsitryrest.Getter = &ExampleHandler{}
+var _ regsitryrest.Lister = &ExampleHandler{}
+var _ regsitryrest.CreaterUpdater = &ExampleHandler{}
 
 type ExampleHandler struct {
 	builder.DefaultStrategy

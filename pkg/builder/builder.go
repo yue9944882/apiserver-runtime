@@ -25,6 +25,8 @@ import (
 
 	"github.com/pwittrock/apiserver-runtime/pkg/apiserver"
 	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource"
+	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource/resourcerest"
+	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource/resourcestrategy"
 	"github.com/pwittrock/apiserver-runtime/pkg/builder/rest"
 	"github.com/pwittrock/apiserver-runtime/pkg/cmd/server"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -109,14 +111,14 @@ func (a *Server) WithResource(obj resource.Object) *Server {
 
 	// If the type implements it's own storage, then use that
 	switch s := obj.(type) {
-	case rest.Creater:
-		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
-	case rest.Updater:
-		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
-	case rest.Getter:
-		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
-	case rest.Lister:
-		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(rest.Storage)}.Get)
+	case resourcerest.Creater:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(regsitryrest.Storage)}.Get)
+	case resourcerest.Updater:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(regsitryrest.Storage)}.Get)
+	case resourcerest.Getter:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(regsitryrest.Storage)}.Get)
+	case resourcerest.Lister:
+		return a.forGroupVersionResource(gvr, obj, rest.StaticHandlerProvider{Storage: s.(regsitryrest.Storage)}.Get)
 	}
 
 	_ = a.forGroupVersionResource(gvr, obj, rest.New(obj))
@@ -198,9 +200,9 @@ func (a *Server) forGroupVersionResource(
 	}
 
 	// add the defaulting function for this version to the scheme
-	if _, ok := obj.(resource.Defaulter); ok {
+	if _, ok := obj.(resourcestrategy.Defaulter); ok {
 		apiserver.Scheme.AddTypeDefaultingFunc(obj, func(obj interface{}) {
-			obj.(resource.Defaulter).Default()
+			obj.(resourcestrategy.Defaulter).Default()
 		})
 	}
 

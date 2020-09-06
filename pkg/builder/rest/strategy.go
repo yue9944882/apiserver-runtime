@@ -19,6 +19,8 @@ package rest
 import (
 	"context"
 
+	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource/resourcestrategy"
+
 	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -74,7 +76,7 @@ func (d DefaultStrategy) NamespaceScoped() bool {
 
 // PrepareForCreate calls the PrepareForCreate function on obj if supported, otherwise does nothing.
 func (DefaultStrategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
-	if v, ok := obj.(resource.PrepareForCreater); ok {
+	if v, ok := obj.(resourcestrategy.PrepareForCreater); ok {
 		v.PrepareForCreate(ctx)
 	}
 }
@@ -85,14 +87,14 @@ func (DefaultStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Ob
 		// don't modify the status
 		v.CopyStatus(ctx, old)
 	}
-	if v, ok := obj.(resource.PrepareForUpdater); ok {
+	if v, ok := obj.(resourcestrategy.PrepareForUpdater); ok {
 		v.PrepareForUpdate(ctx, old)
 	}
 }
 
 // Validate calls the Validate function on obj if supported, otherwise does nothing.
 func (DefaultStrategy) Validate(ctx context.Context, obj runtime.Object) field.ErrorList {
-	if v, ok := obj.(resource.Validater); ok {
+	if v, ok := obj.(resourcestrategy.Validater); ok {
 		return v.Validate(ctx)
 	}
 	return field.ErrorList{}
@@ -102,7 +104,7 @@ func (d DefaultStrategy) AllowCreateOnUpdate() bool {
 	if d.Object == nil {
 		return false
 	}
-	if n, ok := d.Object.(resource.AllowCreateOnUpdater); ok {
+	if n, ok := d.Object.(resourcestrategy.AllowCreateOnUpdater); ok {
 		return n.AllowCreateOnUpdate()
 	}
 	return false
@@ -112,7 +114,7 @@ func (d DefaultStrategy) AllowUnconditionalUpdate() bool {
 	if d.Object == nil {
 		return false
 	}
-	if n, ok := d.Object.(resource.AllowUnconditionalUpdater); ok {
+	if n, ok := d.Object.(resourcestrategy.AllowUnconditionalUpdater); ok {
 		return n.AllowUnconditionalUpdate()
 	}
 	return false
@@ -120,14 +122,14 @@ func (d DefaultStrategy) AllowUnconditionalUpdate() bool {
 
 // Canonicalize calls the Canonicalize function on obj if supported, otherwise does nothing.
 func (DefaultStrategy) Canonicalize(obj runtime.Object) {
-	if c, ok := obj.(resource.Canonicalizer); ok {
+	if c, ok := obj.(resourcestrategy.Canonicalizer); ok {
 		c.Canonicalize()
 	}
 }
 
 // ValidateUpdate calls the ValidateUpdate function on obj if supported, otherwise does nothing.
 func (DefaultStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
-	if v, ok := obj.(resource.ValidateUpdater); ok {
+	if v, ok := obj.(resourcestrategy.ValidateUpdater); ok {
 		return v.ValidateUpdate(ctx, old)
 	}
 	return field.ErrorList{}
@@ -145,7 +147,7 @@ func (DefaultStrategy) Match(label labels.Selector, field fields.Selector) stora
 
 func (d DefaultStrategy) ConvertToTable(
 	ctx context.Context, obj runtime.Object, tableOptions runtime.Object) (*metav1.Table, error) {
-	if c, ok := obj.(resource.TableConverter); ok {
+	if c, ok := obj.(resourcestrategy.TableConverter); ok {
 		return c.ConvertToTable(ctx, tableOptions)
 	}
 	return d.TableConvertor.ConvertToTable(ctx, obj, tableOptions)
