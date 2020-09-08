@@ -119,7 +119,7 @@ def reconcile(resource_list):
       "kind": "RoleBinding",
       "metadata": {
         "name": name + "-auth-reader",
-        "namespace": namespace,
+        "namespace": "kube-system",
         "annotations": {
           "config.kubernetes.io/path": "resources/auth-reader.yaml",
         },
@@ -133,7 +133,7 @@ def reconcile(resource_list):
         {
           "kind": "ServiceAccount",
           "name": "apiserver",
-          "namespace": "kube-system",
+          "namespace": namespace,
         },
       ],
     }
