@@ -64,8 +64,8 @@ func (e ExampleResource) GetGroupVersionResource() schema.GroupVersionResource {
 	return SchemeGroupVersion.WithResource("exampleresources")
 }
 
-// IsInternalVersion returns true for the resource version used as the storage version.
-func (e ExampleResource) IsInternalVersion() bool {
+// IsStorageVersion returns true for the resource version used as the storage version.
+func (e ExampleResource) IsStorageVersion() bool {
 	return true
 }
 
