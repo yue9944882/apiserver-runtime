@@ -17,11 +17,16 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource"
+	"github.com/pwittrock/apiserver-runtime/pkg/example/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+var _ resource.Object = &ExampleResource{}
+var _ resource.MultiVersionObject = &ExampleResource{}
 
 type ExampleResource struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -60,11 +65,29 @@ func (e ExampleResource) GetGroupVersionResource() schema.GroupVersionResource {
 	return schema.GroupVersionResource{Group: "example.com", Version: "v1beta1", Resource: "examples"}
 }
 
-func (e ExampleResource) IsInternalVersion() bool {
-	return true
+func (e ExampleResource) IsStorageVersion() bool {
+	return false
 }
 
 func (e *ExampleResourceList) DeepCopyObject() runtime.Object {
 	// implemented by code generation
 	return e
+}
+
+var _ resource.MultiVersionObject = &ExampleResource{}
+
+func (e *ExampleResource) NewStorageVersionObject() runtime.Object {
+	return &v1alpha1.ExampleResource{}
+}
+
+func (e *ExampleResource) ConvertToStorageVersion(storageObj runtime.Object) error {
+	_ = storageObj.(*v1alpha1.ExampleResource)
+	// TODO: do v1beta1 -> v1alpha1 conversion
+	return nil
+}
+
+func (e *ExampleResource) ConvertFromStorageVersion(storageObj runtime.Object) error {
+	_ = storageObj.(*v1alpha1.ExampleResource)
+	// TODO: do v1alpha1 -> v1beta1 conversion
+	return nil
 }

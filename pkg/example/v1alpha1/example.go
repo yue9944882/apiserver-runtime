@@ -59,7 +59,7 @@ func (e ExampleResource) GetGroupVersionResource() schema.GroupVersionResource {
 	return schema.GroupVersionResource{Group: "example.com", Version: "v1alpha1", Resource: "examples"}
 }
 
-func (e ExampleResource) IsInternalVersion() bool {
+func (e ExampleResource) IsStorageVersion() bool {
 	return true
 }
 

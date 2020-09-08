@@ -18,9 +18,9 @@ package resource
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/pwittrock/apiserver-runtime/pkg/builder/resource/resourcestrategy"
-
+	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"k8s.io/apiserver/pkg/registry/rest"
@@ -51,9 +51,25 @@ type Object interface {
 	// be the all lowercase and pluralized kind.s
 	GetGroupVersionResource() schema.GroupVersionResource
 
-	// IsInternalVersion returns true if the object is also the internal version -- i.e. is the type defined
+	// IsStorageVersion returns true if the object is also the internal version -- i.e. is the type defined
 	// for the API group an alias to this object.
-	IsInternalVersion() bool
+	// If false, the resource is expected to implement MultiVersionObject interface.
+	IsStorageVersion() bool
+}
+
+// Object should be implemented if the resource is not storage version and has multiple versions serving
+// at the server.
+type MultiVersionObject interface {
+	// NewStorageVersionObject returns a new empty instance of storage version.
+	NewStorageVersionObject() runtime.Object
+
+	// ConvertToStorageVersion receives an new instance of storage version object as the conversion target
+	// and overwrites it to the equal form of the current resource version.
+	ConvertToStorageVersion(storageObj runtime.Object) error
+
+	// ConvertFromStorageVersion receives an instance of storage version as the conversion source and
+	// in-place mutates the current object to the equal form of the storage version object.
+	ConvertFromStorageVersion(storageObj runtime.Object) error
 }
 
 // StatusGetSetter defines an interface for getting and setting the status for a resource.
@@ -76,10 +92,27 @@ func AddToScheme(objs ...Object) func(s *runtime.Scheme) error {
 		for i := range objs {
 			obj := objs[i]
 			s.AddKnownTypes(obj.GetGroupVersionResource().GroupVersion(), obj.New(), obj.NewList())
-			if obj.IsInternalVersion() {
+			if obj.IsStorageVersion() {
 				s.AddKnownTypes(schema.GroupVersion{
 					Group:   runtime.APIVersionInternal,
 					Version: obj.GetGroupVersionResource().Version}, obj.New(), obj.NewList())
+			} else {
+				multiVersionObj, ok := obj.(MultiVersionObject)
+				if !ok {
+					return fmt.Errorf("resource should implement MultiVersionObject if it's not storage-version")
+				}
+				// registering conversion functions to scheme instance
+				storageVersionObj := multiVersionObj.NewStorageVersionObject()
+				if err := s.AddConversionFunc(obj, storageVersionObj, func(from, to interface{}, _ conversion.Scope) error {
+					return from.(MultiVersionObject).ConvertToStorageVersion(to.(runtime.Object))
+				}); err != nil {
+					return err
+				}
+				if err := s.AddConversionFunc(storageVersionObj, obj, func(from, to interface{}, _ conversion.Scope) error {
+					return from.(MultiVersionObject).ConvertFromStorageVersion(to.(runtime.Object))
+				}); err != nil {
+					return err
+				}
 			}
 			if _, ok := obj.(resourcestrategy.Defaulter); ok {
 				s.AddTypeDefaultingFunc(obj, func(o interface{}) {
