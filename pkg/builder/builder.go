@@ -318,6 +318,16 @@ func (a *Server) withGroupVersions(versions ...schema.GroupVersion) *Server {
 	return a
 }
 
+// DisableDelegateAuth disables delegated authentication and authorization
+func (s *Server) DisableDelegateAuth() *Server {
+	server.ServerOptionsFns = append(server.ServerOptionsFns, func(o *ServerOptions) *ServerOptions {
+		o.RecommendedOptions.Authentication.RemoteKubeConfigFileOptional = true
+		o.RecommendedOptions.Authorization.RemoteKubeConfigFileOptional = true
+		return o
+	})
+	return s
+}
+
 // WithOptionsFns sets functions to customize the ServerOptions used to create the apiserver
 func (a *Server) WithOptionsFns(fns ...func(*ServerOptions) *ServerOptions) *Server {
 	server.ServerOptionsFns = append(server.ServerOptionsFns, fns...)

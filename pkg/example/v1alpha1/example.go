@@ -56,7 +56,7 @@ func (e ExampleResource) NewList() runtime.Object {
 }
 
 func (e ExampleResource) GetGroupVersionResource() schema.GroupVersionResource {
-	return schema.GroupVersionResource{Group: "example.com", Version: "v1alpha1", Resource: "examples"}
+	return schema.GroupVersionResource{Group: "example.com", Version: "v1alpha1", Resource: "exampleresources"}
 }
 
 func (e ExampleResource) IsStorageVersion() bool {
